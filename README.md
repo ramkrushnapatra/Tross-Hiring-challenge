@@ -14,10 +14,12 @@ LinkedIn does not expose a public API for arbitrary profile data. The internal *
 
 | Setup | Result |
 |-------|--------|
-| **Email + password in `.env`** | HTTP login → cookies → Voyager calls |
-| **Cookies in `.env`** (`LINKEDIN_LI_AT`, `LINKEDIN_JSESSIONID`) | Skip login; use cookies directly |
+| **Cookies in `.env`** (`LINKEDIN_LI_AT`, `LINKEDIN_JSESSIONID`) | **Recommended** — no email/password needed |
+| **Email + password in `.env`** | Optional fallback — HTTP login → cookies (often blocked by LinkedIn) |
 | **No credentials** | `/health` → `CREDENTIALS_NOT_CONFIGURED`; `/profile` fails |
 | **No login (public only)** | Very limited data — not sufficient for this challenge |
+
+**You do not need both.** Cookies alone are enough. Username and password are optional and usually fail on automated/cloud login.
 
 The challenge PDF states: _"You may use your own LinkedIn credentials in the backend."_
 
@@ -118,13 +120,7 @@ python app.py
 
 ### Configure `.env` (pick one option)
 
-**Option 1 — email + password:**
-```env
-LINKEDIN_EMAIL=your@email.com
-LINKEDIN_PASSWORD=yourpassword
-```
-
-**Option 2 — session cookies** (recommended if HTTP login hits CAPTCHA):
+**Option 1 — session cookies** (recommended; no email/password required):
 
 1. Log in at [linkedin.com](https://www.linkedin.com) in Chrome/Edge.
 2. Open DevTools (F12) → **Application** → **Cookies** → `https://www.linkedin.com`.
@@ -133,6 +129,12 @@ LINKEDIN_PASSWORD=yourpassword
 ```env
 LINKEDIN_LI_AT=your_li_at_cookie
 LINKEDIN_JSESSIONID=your_jsessionid_cookie
+```
+
+**Option 2 — email + password** (optional; may be blocked by LinkedIn CAPTCHA):
+```env
+LINKEDIN_EMAIL=your@email.com
+LINKEDIN_PASSWORD=yourpassword
 ```
 
 ### Test
@@ -152,16 +154,16 @@ curl -X POST http://localhost:8000/profile \
 ```bash
 docker build -t linkedin-profile-api .
 docker run -p 8000:8000 \
-  -e LINKEDIN_EMAIL=your@email.com \
-  -e LINKEDIN_PASSWORD=yourpassword \
+  -e LINKEDIN_LI_AT=your_li_at_cookie \
+  -e LINKEDIN_JSESSIONID=your_jsessionid_cookie \
   linkedin-profile-api
 ```
 
 ### Railway / Render / Fly.io
 
 1. Push repo to GitHub (no `.env`).
-2. Connect repo; use Dockerfile.
-3. Set `LINKEDIN_EMAIL`, `LINKEDIN_PASSWORD` (or cookie vars) in **platform Variables** tab.
+2. Connect repo; use Dockerfile or Python 3 build.
+3. Set **only** `LINKEDIN_LI_AT` and `LINKEDIN_JSESSIONID` in the platform **Environment Variables** tab (email/password not required).
 4. Deploy — platform provides HTTPS URL.
 
 Lightweight image (~150MB) — no Chromium required.
