@@ -80,12 +80,26 @@ Base URL (local): `http://localhost:8000`
 
 ### `GET /health`
 
+**Healthy session:**
+
 ```json
 {
   "status": "ok",
   "linkedin_session": "active",
   "credentials_configured": true,
   "auth_method": "http"
+}
+```
+
+**Degraded (missing or invalid credentials):**
+
+```json
+{
+  "status": "degraded",
+  "linkedin_session": "inactive",
+  "credentials_configured": false,
+  "error": "LinkedIn credentials missing...",
+  "code": "CREDENTIALS_NOT_CONFIGURED"
 }
 ```
 
@@ -100,7 +114,97 @@ Base URL (local): `http://localhost:8000`
 }
 ```
 
-**Success (200):** Returns `success`, `source_url`, `scraped_at`, `profile` (name, headline, location, about, experience, education, skills, certifications, languages, profile image), and `metadata`.
+**Success (200):**
+
+```json
+{
+  "success": true,
+  "source_url": "https://www.linkedin.com/in/username",
+  "scraped_at": "2026-08-28T10:30:00Z",
+  "profile": {
+    "public_identifier": "username",
+    "name": {
+      "first": "Jane",
+      "last": "Doe",
+      "full": "Jane Doe"
+    },
+    "headline": "Software Engineer at Example Co",
+    "location": {
+      "full": "Bengaluru, Karnataka, India",
+      "city": "Bengaluru",
+      "country": "India"
+    },
+    "about": "Short bio text...",
+    "profile_image_url": "https://media.licdn.com/...",
+    "experience": [
+      {
+        "title": "Software Engineer",
+        "company": "Example Co",
+        "location": "Bengaluru, India",
+        "description": "Role description...",
+        "date_range": {
+          "start": "01/2022",
+          "end": null
+        },
+        "is_current": true
+      }
+    ],
+    "education": [
+      {
+        "school": "Example University",
+        "degree": "Bachelor of Technology",
+        "field_of_study": "Computer Science",
+        "date_range": {
+          "start": "2018",
+          "end": "2022"
+        },
+        "description": null
+      }
+    ],
+    "skills": [
+      {
+        "name": "Python",
+        "endorsement_count": 12
+      }
+    ],
+    "certifications": [
+      {
+        "name": "AWS Certified Developer",
+        "authority": "Amazon Web Services",
+        "issue_date": "06/2023",
+        "expiration_date": null,
+        "url": "https://..."
+      }
+    ],
+    "languages": [
+      {
+        "name": "English",
+        "proficiency": "Native or bilingual proficiency"
+      }
+    ]
+  },
+  "metadata": {
+    "completeness": "full",
+    "warnings": []
+  }
+}
+```
+
+**Field notes:**
+- `date_range.start` / `date_range.end` — `MM/YYYY` or `YYYY`; `end` is `null` for current roles.
+- `metadata.completeness` — `"full"` or `"partial"` (partial when many sections are missing).
+- `metadata.warnings` — list of missing sections, e.g. `"No skills available"`.
+- Some fields may be `null` or empty arrays depending on profile privacy and Voyager data.
+
+**Error (4xx/5xx):**
+
+```json
+{
+  "success": false,
+  "error": "Human-readable error message",
+  "code": "INVALID_URL"
+}
+```
 
 **Error codes:** `MISSING_URL`, `INVALID_URL`, `PROFILE_NOT_FOUND`, `CREDENTIALS_NOT_CONFIGURED`, `SESSION_EXPIRED`, `LOGIN_FAILED`, `LOGIN_VERIFICATION_REQUIRED`, `INTERNAL_ERROR`
 
