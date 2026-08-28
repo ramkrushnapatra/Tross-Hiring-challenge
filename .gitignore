@@ -1,0 +1,12 @@
+.env
+*.pyc
+__pycache__/
+.venv/
+venv/
+.env.local
+cookies.json
+session_data/
+.pytest_cache/
+.idea/
+.vscode/
+*.log
